@@ -1,0 +1,96 @@
+/**
+ * @Author: Walden Emil Bjørn-Yoshimoto <mfd356>
+ * @Date:   20190109-0901
+ * @Email:  waldenb@gmail.com
+ * @Last modified by:   mfd356
+ * @Last modified time: 20190928-1509
+ */
+
+ /* Hover over */
+
+.entity:hover {
+  stroke: #03A9F4 !important;
+  stroke-width: 1px !important;
+  stroke-opacity: 1 !important;
+}
+
+.visibility-on {
+  visibility: visible !important;
+}
+
+.visibility-off {
+  visibility: hidden !important;
+}
+
+/* Temperature sensor */
+
+.temp-very-low-background {
+  fill: #d9edf7 !important;
+  fill-opacity: 1 !important;
+}
+
+.temp-below-average-background {
+  fill: #dcefe8 !important;
+  fill-opacity: 1 !important;
+}
+
+.temp-average-background {
+  fill: #dff0d8 !important;
+  fill-opacity: 1 !important;
+}
+
+.temp-very-high-background {
+  fill: #f2dede !important;
+  fill-opacity: 1 !important;
+}
+
+/* Battery state */
+
+.battery-very-low {
+  fill: #b20000 !important;
+  fill-opacity: 1 !important;
+}
+
+.battery-low {
+  fill: #ce9000 !important;
+  fill-opacity: 1 !important;
+}
+
+.battery-ok {
+  fill: #10db0d !important;
+  fill-opacity: 1 !important;
+}
+
+.battery-good {
+  fill: #0000FF !important;
+  fill-opacity: 1 !important;
+}
+
+/* Port open */
+
+.port-open {
+  fill: #b20000 !important;
+  fill-opacity: 1 !important;
+}
+
+.port-closed {
+  fill: #5a5a5a !important;
+  fill-opacity: 1 !important;
+}
+
+/* A/C */
+
+.ac-heating {
+  fill: #b20000 !important;
+  fill-opacity: 1 !important;
+}
+
+.ac-cooling {
+  fill: #0000FF !important;
+  fill-opacity: 1 !important;
+}
+
+.ac-off {
+  fill: #5a5a5a !important;
+  fill-opacity: 1 !important;
+}
