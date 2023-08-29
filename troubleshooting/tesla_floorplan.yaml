@@ -1,0 +1,25 @@
+type: custom:floorplan-card
+config:
+  image:
+    location: /local/floorplan/tesla/tesla_floorplan_v1.svg
+    cache: false
+  stylesheet:
+    location: /local/floorplan/tesla/tesla_floorplan.css
+    cache: false
+  console_log_level: warn
+  defaults:
+    hover_action: hover-info
+    tap_action: more-info
+  rules:
+
+# ... (your other configurations)
+
+
+    - name: Driver Front
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: driver_front_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_front === "open" && entity.attributes.driver_rear === "closed") ? "visibility-on" : "visibility-off"}'
