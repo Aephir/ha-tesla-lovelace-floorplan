@@ -1,10 +1,3 @@
-/**
- * @Author: Walden Emil Bjørn-Yoshimoto <mfd356>
- * @Date:   20190109-0901
- * @Email:  waldenb@gmail.com
- * @Last modified by:   mfd356
- * @Last modified time: 20190928-1509
- */
 
  /* Hover over */
 
@@ -24,23 +17,23 @@
 
 /* Temperature sensor */
 
-.temp-very-low-background {
-  fill: #d9edf7 !important;
+.temp-very-low {
+  fill: #323cd2 !important;
   fill-opacity: 1 !important;
 }
 
-.temp-below-average-background {
-  fill: #dcefe8 !important;
+.temp-below-average {
+  fill: #4650a0 !important;
   fill-opacity: 1 !important;
 }
 
-.temp-average-background {
-  fill: #dff0d8 !important;
+.temp-average {
+  fill: #5a5a5a !important;
   fill-opacity: 1 !important;
 }
 
-.temp-very-high-background {
-  fill: #f2dede !important;
+.temp-very-high {
+  fill: #a83f3f !important;
   fill-opacity: 1 !important;
 }
 
@@ -57,11 +50,11 @@
 }
 
 .battery-ok {
-  fill: #10db0d !important;
+  fill: #5a5a5a !important;
   fill-opacity: 1 !important;
 }
 
-.battery-good {
+.battery-high {
   fill: #0000FF !important;
   fill-opacity: 1 !important;
 }
@@ -74,6 +67,30 @@
 }
 
 .port-closed {
+  fill: #5a5a5a !important;
+  fill-opacity: 1 !important;
+}
+
+/* Stroke icon binary state */
+
+.icon-stroke-red {
+  stroke: #b20000 !important;
+  stroke-opacity: 1 !important;
+}
+
+.icon-stroke-grey {
+  stroke: #5a5a5a !important;
+  stroke-opacity: 1 !important;
+}
+
+/* Fill icon binary state */
+
+.icon-fill-red {
+  fill: #b20000 !important;
+  fill-opacity: 1 !important;
+}
+
+.icon-fill-grey {
   fill: #5a5a5a !important;
   fill-opacity: 1 !important;
 }
