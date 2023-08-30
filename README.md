@@ -71,6 +71,7 @@ The icons in the lower row are colored with the "standard" grey for what I have 
  
 ### Add your own car
 I have provided the template to add your own car model/color, `tesla-screenshot-editor.svg`.
+If you do, __PLEASE SHARE__ so others can use it. Create a pull request, or give me a link to the finished *.svg file.
 
 To do so,, you need to:
 - Take a screensshot in the Tesla App on your phone of each of the following conditions:
