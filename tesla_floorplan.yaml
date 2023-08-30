@@ -1,7 +1,7 @@
 type: custom:floorplan-card
 config:
   image:
-    location: /local/floorplan/tesla/tesla_floorplan_v1.svg
+    location: /local/floorplan/tesla/tesla_floorplan.svg
     cache: false
   stylesheet:
     location: /local/floorplan/tesla/tesla_floorplan.css
@@ -10,7 +10,118 @@ config:
   defaults:
     hover_action: hover-info
     tap_action: more-info
+    hold_action: more-info
   rules:
+
+    - name: Driver Front
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: driver_front_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_front === "open" && entity.attributes.driver_rear === "closed") ? "visibility-on" : "visibility-off"}'
+
+    - name: Driver Rear
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: driver_rear_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_front === "closed" && entity.attributes.driver_rear === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Driver Both
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: driver_both_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_front === "open" && entity.attributes.driver_rear === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Charge Port Open
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: charge_port_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_rear === "closed" && entity.attributes.charger_door === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Passenger Front
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: passenger_front_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "open" && entity.attributes.frunk === "closed") ? "visibility-on" : "visibility-off"}'
+
+    - name: Passenger Rear
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: passenger_rear_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "closed" && entity.attributes.passenger_rear === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Passenger Both
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: passenger_both_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "open" && entity.attributes.passenger_rear === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Charge Port Open (Driver Rear Open)
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: charge_port_open_driver_rear_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.driver_rear === "open" && entity.attributes.charger_door === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Passenger Front and Frunk Open
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: passenger_front_and_frunk_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "open" && entity.attributes.passenger_rear === "closed" && entity.attributes.frunk === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Passenger Both and Frunk Open
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: passenger_both_open_and_frunk_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "open" && entity.attributes.passenger_rear === "open" && entity.attributes.frunk === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Frunk Open
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: frunk_open
+      tap_action: disable
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.passenger_front === "closed" && entity.attributes.frunk === "open") ? "visibility-on" : "visibility-off"}'
+
+    - name: Trunk
+      entities:
+        - entity: binary_sensor.tesla_model_y_all_openings
+          element: trunk_open
+      state_action:
+        service: floorplan.class_set
+        service_data: '${(entity.attributes.trunk === "open") ? "visibility-on" : "visibility-off"}'
+
+# Text
+
     - name: Battery
       entities:
         - entity: sensor.model_y_battery
@@ -19,8 +130,8 @@ config:
       state_action:
         - service: floorplan.text_set
           service_data: >-
-            ${(entity.state !== undefined) ? Math.round(entity.state *
-            10) / 10 : "unknown"}
+            ${(entity.state !== undefined) ? Math.round(entity.state * 10) / 10
+            : "unknown"}
         - service: floorplan.class_set
           service_data:
             class: |
@@ -30,10 +141,10 @@ config:
                 {return "battery-very-low";}
               else if (Number(temp) < 50)
                 {return "battery-low";}
-              else if (Number(temp) < 70)
+              else if (Number(temp) < 80)
                 {return "battery-ok";}
               else
-                {return "battery-good";}
+                {return "battery-high";}
     - name: Range
       entities:
         - entity: sensor.model_y_range
@@ -42,8 +153,8 @@ config:
       state_action:
         - service: floorplan.text_set
           service_data: >-
-            ${(entity.state !== undefined) ? Math.round(entity.state *
-            10) / 10 : "unknown"}
+            ${(entity.state !== undefined) ? Math.round(entity.state) :
+            "unknown"}
     - name: Charger
       entities:
         - entity: binary_sensor.model_y_charger
@@ -51,7 +162,7 @@ config:
       tap_action: disable
       state_action:
         - service: floorplan.text_set
-          service_data: ${(entity.state)}
+          service_data: '${(entity.state === "on") ? "Plugged in" : "Unplugged"}'
     - name: Charging
       entities:
         - entity: binary_sensor.model_y_charging
@@ -59,31 +170,15 @@ config:
       tap_action: disable
       state_action:
         - service: floorplan.text_set
-          service_data: ${(entity.state)}
-    - name: Ports and trunks
-      entities:
-        - entity: cover.model_y_charger_door
-          element: charge_port
-        - entity: cover.model_y_trunk
-          element: trunk
-        - entity: cover.model_y_frunk
-          element: frunk
-      tap_action: cover.toggle
-      state_action:
-        - service: floorplan.class_set
-          service_data: >-
-            ${(entity.state === "open") ? "port-open" :
-            "port-closed"}
+          service_data: '${(entity.state === "on") ? "Charging" : "Not Charging"}'
     - name: Lock
       entities:
         - entity: lock.model_y_doors
           element: lock
-      tap_action: toggle
+      tap_action: disable
       state_action:
         - service: floorplan.class_set
-          service_data: >-
-            ${(entity.state === "locked") ? "visibility-on" :
-            "visibility-off"}
+          service_data: '${(entity.state === "locked") ? "visibility-on" : "visibility-off"}'
     - name: A/C
       entities:
         - entity: climate.model_y_hvac_climate_system
@@ -100,373 +195,279 @@ config:
                 {return "ac-cooling";}
               else
                 {return "ac-off";}
-        - action: call_service
+#        - action: call_service
+#          service_data: |-
+#            if (entity.state === 'off') {
+#              hass.callService('climate', 'set_hvac_mode', {
+#                entity_id: 'climate.model_y_hvac_climate_system',
+#                hvac_mode: 'auto',
+#                temperature: 22
+#              });
+#            } else {
+#              hass.callService('climate', 'set_hvac_mode', {
+#                entity_id: 'climate.model_y_hvac_climate_system',
+#                hvac_mode: 'off'
+#              });
+#            }
+
+    - name: Temperature Sensors
+      entities:
+        - entity: sensor.model_y_temperature_inside
+          element: temp_in
+        - entity: sensor.model_y_temperature_outside
+          element: temp_out
+      state_action:
+        - service: floorplan.text_set
           service_data: >-
-            if (entity.state === 'off') {
-              hass.callService('climate', 'set_hvac_mode', {
-                entity_id: 'climate.model_y_hvac_climate_system',
-                hvac_mode: 'auto',
-                temperature: 22
-              });
-            } else {
-              hass.callService('climate', 'set_hvac_mode', {
-                entity_id: 'climate.model_y_hvac_climate_system',
-                hvac_mode: 'off'
-              });
-            }
-    - name: Defrost
+            ${(entity.state !== undefined) ? parseFloat(entity.state).toFixed(1) : "unknown"}
+        - service: floorplan.class_set
+          service_data:
+            class: |
+              >
+              var temp = parseFloat(entity.state);  
+              if (Number(temp) < 5)
+                {return "temp-very-low";}
+              else if (Number(temp) < 18)
+                {return "temp-below-average";}
+              else if (Number(temp) < 23.1)
+                {return "temp-average";}
+              else
+                {return "temp-very-high";}
+
+    - name: Temperature HVAC
       entities:
         - entity: climate.model_y_hvac_climate_system
-          element: defrost
+          element: temp_set
+      state_action:
+        - service: floorplan.text_set
+          service_data: >-
+            ${(entity.attributes.temperature !== undefined) ? parseFloat(entity.attributes.temperature).toFixed(1) : "unknown"}
+        - service: floorplan.class_set
+          service_data:
+            class: |
+              >
+              var temp = parseFloat(entity.attributes.temperature);  
+              if (Number(temp) < 5)
+                {return "temp-very-low";}
+              else if (Number(temp) < 18)
+                {return "temp-below-average";}
+              else if (Number(temp) < 23.1)
+                {return "temp-average";}
+              else
+                {return "temp-very-high";}
+
+    - name: Location
+      entities:
+        - entity: device_tracker.model_y_location_tracker
+          element: location
+      state_action:
+        - service: floorplan.text_set
+          service_data: >-
+            ${(entity.state).charAt(0).toUpperCase() +
+            (entity.state).slice(1)}
+
+    - name: Destination
+      entities:
+        - entity: device_tracker.model_y_destination_location_tracker
+          element: destination
+      state_action:
+        - service: floorplan.text_set
+          service_data: >-
+            ${(entity.state).charAt(0).toUpperCase() +
+            (entity.state).slice(1)}
+
+    - name: Last update
+      entities:
+        - entity: sensor.model_y_data_last_update_time
+          element: update_time
+      state_action:
+        - service: floorplan.text_set
+          service_data: >-
+            ${new Date(entity.state).toLocaleString('en-US', { timeZone: 'Europe/Copenhagen', hour12: false }).split(",")[0].split("/").reverse().join("-") + " " + new Date(entity.state).toLocaleString('en-US', { timeZone: 'Europe/Copenhagen', hour12: false }).split(",")[1].trim().slice(0, -3)}
+
+    - name: Defrost text
+      entities:
+        - entity: climate.model_y_hvac_climate_system
+          element: defrost-text
       state_action:
         - service: floorplan.class_set
-          service_data: >-
-            ${(entity.state === "defrost") ? "port-open" :
-            "port-closed"}
-        - action: call_service
-          service_data: >-
-            hass.callService('climate', 'set_hvac_mode', {
-              entity_id: 'climate.model_y_hvac_climate_system',
-              hvac_mode: 'auto',
-              temperature: 22
-            })
+          service_data: '${(entity.attributes.preset_mode === "Defrost") ? "icon-fill-red" : "icon-fill-grey"}'
 
-# Rules for doors and charging ports
-    - name: Driver Front
+    # Icons
+
+    - name: AC Icon
       entities:
-        - entity: binary_sensor.model_y_doors
-          element: driver_front_open
-      tap_action: disable
-      hover_action: disable
+        - entity: climate.model_y_hvac_climate_system
+          element: ac-icon
       state_action:
-        service: floorplan.text_set
-        service_data: >-
-          {
-            const driver_front = hass.states["cover.model_y_charger_door"].attributes.driver_front;
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            
-            if (driver_front === "open" && driver_rear === "closed") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Driver Rear
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_front = hass.states["cover.model_y_charger_door"].attributes.driver_front;
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            
-            if (driver_front === "closed" && driver_rear === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Driver Both
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_front = hass.states["cover.model_y_charger_door"].attributes.driver_front;
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            
-            if (driver_front === "open" && driver_rear === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Charge Port Open (Driver Rear Open) - Doors
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: charge_port_open_driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            const charge_port = hass.states["cover.model_y_charger_door"].state;
-            
-            if (driver_rear === "open" && charge_port === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Charge Port Open (Driver Rear Open) - Charge Port
-      entities:
-        - entity: cover.model_y_charge_door
-          element: charge_port_open_driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            const charge_port = hass.states["cover.model_y_charger_door"].state;
-            
-            if (driver_rear === "open" && charge_port === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Charge Port Open (Driver Rear Closed) - Doors
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: charge_port_open_driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            const charge_port = hass.states["cover.model_y_charger_door"].state;
-            
-            if (driver_rear === "closed" && charge_port === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Charge Port Open (Driver Rear Closed) - Charge Port
-      entities:
-        - entity: cover.model_y_charge_door
-          element: charge_port_open_driver_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >- # On if driver_front is "open" and driver_rear is "closed"
-          {
-            const driver_rear = hass.states["binary_sensor.model_y_doors"].attributes.driver_rear;
-            const charge_port = hass.states["cover.model_y_charger_door"].state;
-            
-            if (driver_rear === "closed" && charge_port === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Passenger Front - Doors
-      entities:
-        - entity: binary_sensor_model_y_doors
-          element: passenger_front_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const frunk = hass.states["cover.model_y_frunk"].state;
-            
-            if (passenger_front === "open" && frunk === "closed") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Passenger Front - Frunk
-      entities:
-        - entity: cover.model_y_frunk
-          element: passenger_front_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const frunk = hass.states["cover.model_y_frunk"].state;
-            
-            if (passenger_front === "open" && frunk === "closed") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Passenger Rear
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: passenger_rear_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            
-            if (passenger_front === "closed" && passenger_rear === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Passenger Both
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: passenger_both_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            
-            if (passenger_front === "open" && passenger_rear === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Open, Passenger Rear Closed) - Doors
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: passenger_front_and_frunk_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "open" && passenger_rear === "closed" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Open, Passenger Rear Closed) - Frunk
-      entities:
-        - entity: cover.model_y_frunk
-          element: passenger_front_and_frunk_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "open" && passenger_rear === "closed" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Open, Passenger Rear Open) - Doors
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: passenger_both_open_and_frunk_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "open" && passenger_rear === "open" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Open, Passenger Rear Open) - Frunk
-      entities:
-        - entity: cover.model_y_frunk
-          element: passenger_both_open_and_frunk_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const passenger_rear = hass.states["binary_sensor.model_y_doors"].attributes.passenger_rear;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "open" && passenger_rear === "open" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Closed) - Doors
-      entities:
-        - entity: binary_sensor.model_y_doors
-          element: frunk_open
-      tap_action: disable
-      hover_action: disable
-      state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "closed" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Frunk Open (Passenger Front Closed) - Frunk
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "off") ? "icon-fill-grey" : "icon-fill-red"}'
+
+    - name: Charge Port Icon
       entities:
         - entity: cover.model_y_charger_door
-          element: frunk_open
-      tap_action: disable
-      hover_action: disable
+          element: charge_port
       state_action:
-        service: floorplan.class_set
-        service_data: >-
-          {
-            const passenger_front = hass.states["binary_sensor.model_y_doors"].attributes.passenger_front;
-            const frunk = hass.states["cover..model_y_frunk"].state;
-            
-            if (passenger_front === "closed" && frunk === "open") {
-              return "visibility-on";
-            } else {
-              return "visibility-off";
-            }
-          }
-    - name: Trunk
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "open") ? "icon-fill-red" : "icon-fill-grey"}'
+
+    - name: Connected Icon
+      entities:
+        - entity: binary_sensor.model_y_online
+          element: online
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "icon-fill-grey" : "icon-fill-red"}'
+
+    - name: Defrost Icon
+      entities:
+        - entity: climate.model_y_hvac_climate_system
+          element: defrost-icon
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.attributes.preset_mode === "Defrost") ? "icon-fill-red" : "icon-fill-grey"}'
+
+    - name: Frunk Icon
+      entities:
+        - entity: cover.model_y_frunk
+          element: frunk-icon
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "open") ? "icon-stroke-red" : "icon-stroke-grey"}'
+
+    - name: Lock Icon
+      entities:
+        - entity: lock.model_y_doors
+          element: lock
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "locked") ? "icon-fill-grey" : "icon-fill-red"}'
+
+    - name: Steering Wheel Icon
+      entities:
+        - entity: switch.model_y_heated_steering
+          element: steering-wheel
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "icon-fill-red" : "icon-fill-grey"}'
+
+    - name: Tire Problem Icon
+      entities:
+        - entity: binary_sensor.tesla_model_y_tire_warning
+          element: tire-problem
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "icon-fill-red" : "icon-fill-grey"}'
+
+    - name: Trunk Icon
       entities:
         - entity: cover.model_y_trunk
-          element: trunk_open
-      tap_action: disable
-      hover_action: disable
+          element: trunk-icon
       state_action:
-        service: floorplan.class_set
-        service_data: >-
-          ${(entity.state === "open") ? "visibility-on" :
-          "visibility-off"}
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "open") ? "icon-stroke-red" : "icon-stroke-grey"}'
+
+    - name: Windows Icon
+      entities:
+        - entity: binary_sensor.model_y_windows
+          element: windows-icon
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "icon-stroke-red" : "icon-stroke-grey"}'
+
+
+    # Invisible overlay buttons
+
+    - name: Charge Port Button
+      entities:
+        - entity: cover.model_y_charger_door
+          element: charge-port-button
+      tap_action:
+        - service: script.model_y_charge_port_button_logic
+
+    - name: Frunk Button
+      entities:
+        - entity: cover.model_y_frunk
+          element: frunk-button
+      tap_action:
+        - service: cover.open_cover
+          service_data:
+            entity_id: cover.model_y_frunk
+
+    - name: Trunk Button
+      entities:
+        - entity: cover.model_y_trunk
+          element: trunk-button
+      tap_action:
+        - service: cover.toggle
+          service_data:
+            entity_id: cover.model_y_trunk
+
+    - name: Lock Button
+      entities:
+        - entity: lock.model_y_doors
+          element: lock-button
+      tap_action:
+        - service: script.model_y_toggle_door_lock
+
+    - name: AC Button
+      entities:
+        - entity: climate.model_y_hvac_climate_system
+          element: ac-button
+      tap_action:
+          - service: script.model_y_ac_toggle_button
+
+#        - action: call_service
+#          service_data: |-
+#            if (entity.state === 'off') {
+#              hass.callService('climate', 'set_hvac_mode', {
+#                entity_id: 'climate.model_y_hvac_climate_system',
+#                hvac_mode: 'auto',
+#                temperature: 22
+#              });
+#            } else {
+#              hass.callService('climate', 'set_hvac_mode', {
+#                entity_id: 'climate.model_y_hvac_climate_system',
+#                hvac_mode: 'off'
+#              });
+#            }
+
+
+#    - name: Defrost Button # <-- Need script to toggle
+#      entities:
+#        - entity: climate.model_y_hvac_climate_system
+#          element: defrost_button
+#      state_action:
+#        - action: call_service
+#          service_data: |-
+#            hass.callService('climate', 'set_preset_mode', {
+#              entity_id: 'climate.model_y_hvac_climate_system',
+#              set_preset_mode: 'defrost'
+#            })
+
+    - name: Steering Wheel Button
+      entities:
+        - entity: climate.model_y_hvac_climate_system
+          element: steering-wheel-button
+      tap_action:
+        - service: switch.toggle
+          service_data:
+            entity_id: switch.model_y_heated_steering
+
+    - name: Window Button
+      entities:
+        - entity: binary_sensor.model_y_windows
+          element: windows-button
+      tap_action:
+        - service: cover.toggle
+          service_data:
+            entity_id: cover.model_y_windows
+
+    - name: Force Update Button
+      entities:
+        - entity: button.model_y_force_data_update
+          element: force-update-button
+      tap_action:
+        - service: button.press
+          service_data:
+            entity_id: button.model_y_force_data_update
