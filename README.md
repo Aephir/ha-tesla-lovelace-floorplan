@@ -68,6 +68,39 @@ The icons in the lower row are colored with the "standard" grey for what I have 
   - Toggle the open/close state of the trunk
 - Force Update
   - Update the data so sensors have the current state (hint: you can see when it was last updated oon tthe card)
+ 
+### Add your own car
+I have provided the template to add your own car model/color, `tesla-screenshot-editor.svg`.
+
+To do so,, you need to:
+- Take a screensshot in the Tesla App on your phone of each of the following conditions:
+  1. All doors, trunk, frunk, charging port closed <-- This is the "base" image.
+  2. Driver side front door open
+  3. Driver side rear door open
+  4. Driver side both doors open
+  5. Driver side rear door open and charging port open
+  6. Passenger side front door open
+  7. Passenger side rear door open
+  8. Passenger side both doors open
+  9. Passenger side front door open and frunk open
+  10. Only charge port open
+  11. Only frunk open
+  12. Only trunk open
+- One at a time:
+  1. Add them to the `tesla-screenshot-editor.svg`
+  2. Duplicate the red rectangle.
+  3. Align the top of the screenshot to the bottom of the blue rectangle, and make sure the red rectangle is on top of the screenshot
+  4. Make sure to scale to fit in width if it doesn't.
+  5. OPTIONAL - Adjust the vertical position of the red rectangle if it's not quite right (migh not be, depending on the resolution of your phone screen).
+  6. Select he red rectangle and the screenshot, and right click to select `set clip`
+  7. Duplicate the small grey rectangle, and use to cover the text in the upper left corner (probably says `Parked`)
+- For the base image, align the top of the large dark grey rectangle (almost square).
+- For all others, use the corresponding image part from the `tesla-floorplan.svg`. If you are lucky, your screenshot will have the same dimentions, and you may be able to overlay it on your screenshot and use the `set clip`. If not, use it too guide how you draw very accurate lines to createa figure of the same shape. Make sure the shape is filled with a color, but has no stroke. Then use `set clip` with your screenshot.
+For whatever reason, I never got floorplan to play nice with these "clip path" objects. The only way I could get the to work is to select each of them, go to to the `Edit` menu and select `Make bitmap copy` . Then delete the original, and name the copy accoring to the corresponding "piece" in `tesla-floorplan.svg`
+- Copy the whole thing into the `tesla-floorplan.svg`.
+- Align all pieces, and make sure they are in the order seen in `tesla-floorplan.svg`, then delete all the old images:
+<img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/order-of-picture-fragments.png?raw=true" width="300" />
+
 
 
 
