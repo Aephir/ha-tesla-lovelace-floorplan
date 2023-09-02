@@ -4,3 +4,179 @@
 #    Lovelace floorplan card.    #
 #                                #
 ##################################
+
+template:
+  - binary_sensor:
+      - name: "Tesla Model Y All Openings"
+        state: >-
+          {% set driver_front = state_attr('binary_sensor.model_y_doors', 'Driver Front') %}
+          {% set driver_rear = state_attr('binary_sensor.model_y_doors', 'Driver Rear') %}
+          {% set passenger_front = state_attr('binary_sensor.model_y_doors', 'Passenger Front') %}
+          {% set passenger_rear = state_attr('binary_sensor.model_y_doors', 'Passenger Rear') %}
+          {% set charger_door = states('cover.model_y_charger_door') %}
+          {% set frunk = states('cover.model_y_frunk') %}
+          {% set trunk = states('cover.model_y_trunk') %}
+
+          {% if driver_front == 'Open' or driver_rear == 'Open' or passenger_front == 'Open' or passenger_rear == 'Open' or charger_door == 'open' or frunk == 'open' or trunk == 'open' %}
+            on
+          {% else %}
+            off
+          {% endif %}
+        attributes:
+          driver_front: >-
+            {{ state_attr('binary_sensor.model_y_doors', 'Driver Front')|lower }}
+          driver_rear: >-
+            {{ state_attr('binary_sensor.model_y_doors', 'Driver Rear')|lower }}
+          passenger_front: >-
+            {{ state_attr('binary_sensor.model_y_doors', 'Passenger Front')|lower }}
+          passenger_rear: >-
+            {{ state_attr('binary_sensor.model_y_doors', 'Passenger Rear')|lower }}
+          charger_door: >-
+            {{ states('cover.model_y_charger_door')|lower }}
+          frunk: >-
+            {{ states('cover.model_y_frunk')|lower }}
+          trunk: >-
+            {{ states('cover.model_y_trunk')|lower }}
+
+      - name: "Tesla Model Y Tire Warning"
+        state: >-
+          {% set front_left_raw = states('sensor.model_y_tpms_front_left') %}
+          {% set front_right_raw = states('sensor.model_y_tpms_front_right') %}
+          {% set back_left_raw = states('sensor.model_y_tpms_rear_left') %}
+          {% set back_right_raw = states('sensor.model_y_tpms_rear_right') %}
+
+          {% set front_left = float(front_left_raw) if front_left_raw != 'unknown' else 0.0 %}
+          {% set front_right = float(front_right_raw) if front_right_raw != 'unknown' else 0.0 %}
+          {% set back_left = float(back_left_raw) if back_left_raw != 'unknown' else 0.0 %}
+          {% set back_right = float(back_right_raw) if back_right_raw != 'unknown' else 0.0 %}
+
+          {% set threshold = 0.3 %}
+          {% set target_pressure = 2.9 %}
+          {% if (front_left - target_pressure)|abs > threshold or
+                (front_right - target_pressure)|abs > threshold or
+                (back_left - target_pressure)|abs > threshold or
+                (back_right - target_pressure)|abs > threshold %}
+            on
+          {% else %}
+            off
+          {% endif %}
+
+        attributes:
+          front_left: "{{ states('sensor.model_y_tpms_front_left') }}"
+          front_right: "{{ states('sensor.model_y_tpms_front_right') }}"
+          back_left: "{{ states('sensor.model_y_tpms_rear_left') }}"
+          back_right: "{{ states('sensor.model_y_tpms_rear_right') }}"
+
+      - name: "Model Y Charger Animation"
+        state: >-
+          {% if states['binary_sensor.model_y_charging'].state == 'on' %}
+            on
+          {% else %}
+            off
+          {% endif %}
+
+        attributes:
+          battery_level: "{{ states('sensor.model_y_battery') }}"
+          charge_limit: "{{ states('number.model_y_charge_limit') }}"
+
+  - sensor:
+      - name: "Model Y Charge Time Remaining"
+        state: >
+          {% set charge_complete_time_raw = states('sensor.model_y_time_charge_complete') %}
+          {% if charge_complete_time_raw != 'unknown' %}
+            {% set charge_complete_time = as_timestamp(charge_complete_time_raw) %}
+            {% set now = as_timestamp(now()) %}
+            {% set time_difference = charge_complete_time - now %}
+            {% set hours = ((time_difference // 3600)|int)|string %}
+            {% set minutes = (((time_difference % 3600) // 60)|int)|string %}
+            {{ hours.zfill(2) }}:{{ minutes.zfill(2) }}
+          {% else %}
+            0
+          {% endif %}
+
+script:
+  model_y_charge_port_button_logic:
+    sequence:
+      - service: lock.unlock
+        entity_id: lock.model_y_charge_port_latch
+      - condition: state
+        entity_id: lock.model_y_charge_port_latch
+        state: "locked"
+      - service: cover.open_cover
+        entity_id: cover.model_y_charger_door
+      - condition: state
+        entity_id: cover.model_y_charger_door
+        state: "closed"
+      - service: cover.close_cover
+        entity_id: cover.model_y_charger_door
+      - condition: state
+        entity_id: binary_sensor.model_y_charger
+        state: "off"
+      - condition: state
+        entity_id: binary_sensor.model_y_charging
+        state: "off"
+      - condition: state
+        entity_id: cover.model_y_charger_door
+        state: "open"
+
+  model_y_set_charge_limit:
+    sequence:
+      - service: number.set_value
+        target:
+          entity_id: number.model_y_charge_limit
+        data:
+          value: >
+            {% set current_value = states('number.model_y_charge_limit')|float %}
+            {% if current_value == 80 %}
+              100
+            {% else %}
+              80
+            {% endif %}
+
+# Scripts to handle conditional locking and unlocking.
+  model_y_toggle_door_lock:
+    alias: Mode Y Toggle Door Lock
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: lock.model_y_doors
+                state: locked
+            sequence:
+              - service: lock.unlock
+                data: {}
+                target:
+                  entity_id: lock.model_y_doors
+          - conditions:
+              - condition: state
+                entity_id: lock.model_y_doors
+                state: unlocked
+            sequence:
+              - service: lock.lock
+                data: {}
+                target:
+                  entity_id: lock.model_y_doors
+    mode: single
+
+# Script to handle conditional climate on/off.
+  model_y_toggle_ac_button:
+    alias: Model Y Toggle AC Button
+    sequence:
+      - service_template: >
+          {% if is_state('climate.model_y_hvac_climate_system', 'off') %}
+            climate.turn_on
+          {% else %}
+            climate.turn_off
+          {% endif %}
+        entity_id: climate.model_y_hvac_climate_system
+
+# Script to handle conditional window venting.
+  model_y_window_button:
+    sequence:
+      - service_template: >
+          {% if is_state('binary_sensor.model_y_windows', 'off') %}
+            cover.open_cover
+          {% else %}
+            climate.turn_off
+          {% endif %}
+        entity_id: cover.model_y_windows
