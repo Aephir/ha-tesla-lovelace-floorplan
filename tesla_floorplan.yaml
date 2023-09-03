@@ -342,11 +342,11 @@ config:
         - service: floorplan.style_set
           service_data:
             style: >
-              animation: charge-animation-variable ${entity.state === 'on' ? (5
-              / 100 * (entity.attributes.charge_limit -
-              entity.attributes.battery_level)) : 0}s linear infinite;
-              --from-width: ${entity.attributes.battery_level}%; --to-width:
-              ${entity.attributes.charge_limit}%;
+              animation: charge-animation-variable ${entity.state === 'on' ? (5 / 100 * (entity.attributes.charge_limit - entity.attributes.battery_level)) : 0}s linear infinite;
+              --from-width: ${entity.attributes.battery_level}%;
+              --to-width: ${entity.attributes.charge_limit}%;
+              width: ${entity.state === 'on' ? 'auto' : '0%'};
+
 
     - name: Charge Port Icon
       entities:
