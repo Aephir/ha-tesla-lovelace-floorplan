@@ -1,7 +1,7 @@
 type: custom:floorplan-card
 config:
   image:
-    location: /local/floorplan/tesla/tesla_floorplan.svg
+    location: /local/floorplan/tesla/tesla_floorplan_no_clip_v2.svg
     cache: false
   stylesheet:
     location: /local/floorplan/tesla/tesla_floorplan.css
@@ -145,6 +145,7 @@ config:
                 {return "battery-ok";}
               else
                 {return "battery-high";}
+
     - name: Range
       entities:
         - entity: sensor.model_y_range
@@ -155,6 +156,7 @@ config:
           service_data: >-
             ${(entity.state !== undefined) ? Math.round(entity.state) :
             "unknown"}
+
     - name: Charger
       entities:
         - entity: binary_sensor.model_y_charger
@@ -163,6 +165,7 @@ config:
       state_action:
         - service: floorplan.text_set
           service_data: '${(entity.state === "on") ? "Plugged in" : "Unplugged"}'
+
     - name: Charging
       entities:
         - entity: binary_sensor.model_y_charging
@@ -170,7 +173,35 @@ config:
       tap_action: disable
       state_action:
         - service: floorplan.text_set
-          service_data: '${(entity.state === "on") ? "Charging" : "Not Charging"}'
+          service_data: '${(entity.state === "on") ? "Charging for" : "Not Charging"}'
+
+    - name: Charge Limit Text
+      entities:
+        - entity: number.model_y_charge_limit
+          element: charge-limit
+      tap_action: disable
+      state_action:
+        - service: floorplan.text_set
+          service_data: '${(entity.state) + " %"}'
+
+    - name: Charge Time Remaining
+      entities:
+        - entity: sensor.model_y_charge_time_remaining
+          element: charge_time
+      tap_action: disable
+      state_action:
+        - service: floorplan.text_set
+          service_data: '${(entity.state)}'
+
+    - name: Charge Time Remaining Visibility
+      entities:
+        - entity: binary_sensor.model_y_charging
+          element: charge_time
+      tap_action: disable
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "visibility-on" : "visibility-off"}'
+
     - name: Lock
       entities:
         - entity: lock.model_y_doors
@@ -195,20 +226,6 @@ config:
                 {return "ac-cooling";}
               else
                 {return "ac-off";}
-#        - action: call_service
-#          service_data: |-
-#            if (entity.state === 'off') {
-#              hass.callService('climate', 'set_hvac_mode', {
-#                entity_id: 'climate.model_y_hvac_climate_system',
-#                hvac_mode: 'auto',
-#                temperature: 22
-#              });
-#            } else {
-#              hass.callService('climate', 'set_hvac_mode', {
-#                entity_id: 'climate.model_y_hvac_climate_system',
-#                hvac_mode: 'off'
-#              });
-#            }
 
     - name: Temperature Sensors
       entities:
@@ -303,6 +320,34 @@ config:
         - service: floorplan.class_set
           service_data: '${(entity.state === "off") ? "icon-fill-grey" : "icon-fill-red"}'
 
+    - name: Battery State Bar
+      entities:
+        - entity: sensor.model_y_battery
+          element: battery-state-bar
+      state_action:
+        service: floorplan.style_set
+        service_data:
+          style: |
+            >
+            return `
+              width: ${entity.state}%;
+            `;
+
+    - name: Battery Charging Bar
+      entities:
+        - entity: binary_sensor.model_y_charger_animation
+          element: battery-charging-bar
+      tap_action: disable
+      state_action:
+        - service: floorplan.style_set
+          service_data:
+            style: >
+              animation: charge-animation-variable ${entity.state === 'on' ? (5
+              / 100 * (entity.attributes.charge_limit -
+              entity.attributes.battery_level)) : 0}s linear infinite;
+              --from-width: ${entity.attributes.battery_level}%; --to-width:
+              ${entity.attributes.charge_limit}%;
+
     - name: Charge Port Icon
       entities:
         - entity: cover.model_y_charger_door
@@ -385,6 +430,13 @@ config:
       tap_action:
         - service: script.model_y_charge_port_button_logic
 
+    - name: Charge Limit
+      entities:
+        - entity: number.model_y_charge_limit
+          element: charge-limit-button
+      tap_action:
+        - service: script.model_y_set_charge_limit
+
     - name: Frunk Button
       entities:
         - entity: cover.model_y_frunk
@@ -417,33 +469,12 @@ config:
       tap_action:
           - service: script.model_y_ac_toggle_button
 
-#        - action: call_service
-#          service_data: |-
-#            if (entity.state === 'off') {
-#              hass.callService('climate', 'set_hvac_mode', {
-#                entity_id: 'climate.model_y_hvac_climate_system',
-#                hvac_mode: 'auto',
-#                temperature: 22
-#              });
-#            } else {
-#              hass.callService('climate', 'set_hvac_mode', {
-#                entity_id: 'climate.model_y_hvac_climate_system',
-#                hvac_mode: 'off'
-#              });
-#            }
-
-
-#    - name: Defrost Button # <-- Need script to toggle
-#      entities:
-#        - entity: climate.model_y_hvac_climate_system
-#          element: defrost_button
-#      state_action:
-#        - action: call_service
-#          service_data: |-
-#            hass.callService('climate', 'set_preset_mode', {
-#              entity_id: 'climate.model_y_hvac_climate_system',
-#              set_preset_mode: 'defrost'
-#            })
+    - name: Defrost Button
+      entities:
+        - entity: climate.model_y_hvac_climate_system
+          element: defrost-button
+      tap_action:
+        - service: script.model_y_toggle_defrost
 
     - name: Steering Wheel Button
       entities:
