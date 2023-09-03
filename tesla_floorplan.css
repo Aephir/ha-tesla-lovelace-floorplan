@@ -1,4 +1,19 @@
 
+/* Animations */
+
+.charge-animation-variable {
+  animation: charge-animation-variable 3s linear infinite;
+}
+
+@keyframes charge-animation-variable {
+  from {
+    width: var(--from-width, 10%);
+  }
+  to {
+    width: var(--to-width, 80%);
+  }
+}
+
  /* Hover over */
 
 .entity:hover {
@@ -94,6 +109,7 @@
   fill: #5a5a5a !important;
   fill-opacity: 1 !important;
 }
+
 
 /* A/C */
 
