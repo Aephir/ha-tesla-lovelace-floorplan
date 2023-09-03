@@ -6,9 +6,15 @@ I should also say that this is a work in progress, some things don't work yet. I
 
 This is a card for controlling and viewing a Tesla car. I have made this for a black Model Y, since this i what I have. However, I have provided a tetmplate and guide if anyone wants tto replace the images with their own model/color.
 
+Here are some screenshots fromo v1.0
 All doors closed, car offline | Trunk open, car online
 :-------------------------:|:-------------------------:
 <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/all-closed-offline.png?raw=true" width="400" /> | <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/trunk-open-online.png?raw=true" width="400" />
+
+And here are a few from v1.1 ("faded" part of charge bar between current charge and set charge limit is animated)
+Doors closed, not charging, charge limit 80% | Trunk, frunk open, charging, charge limit 100%
+---|---
+<img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/Doors%20closed,%20not%20charging,%20charge%20limit%2080%25.png?raw=true" width="400" /> | <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/Trunk,%20frunk%20open,%20charging,%20charge%20limit%20100%25.png?raw=true"  width="400" />
 
 ## Requirements
 - The [Tesla custom component](https://github.com/alandtse/tesla)
@@ -71,9 +77,10 @@ The icons in the lower row are colored with the "standard" grey for what I have 
  
 ### Add your own car
 I have provided the template to add your own car model/color, `tesla-screenshot-editor.svg`.
-If you do, __PLEASE SHARE__ so others can use it. Create a pull request, or give me a link to the finished *.svg file.
 
-To do so,, you need to:
+If you do so, __PLEASE SHARE__ so others can use it. Create a pull request, or give me a link to the finished *.svg file.
+
+To do so, you need to:
 - Take a screensshot in the Tesla App on your phone of each of the following conditions:
   1. All doors, trunk, frunk, charging port closed <-- This is the "base" image.
   2. Driver side front door open
