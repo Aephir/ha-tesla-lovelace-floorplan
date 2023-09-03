@@ -94,31 +94,50 @@ template:
             0
           {% endif %}
 
+        attributes:
+          charging: "{{ states('sensor.model_y_charging') }}"
+
 script:
+# Script to open or close the charge port
+# Take care if using, states might not be updated in HA, and you can end up sending a "close" command while connected
   model_y_charge_port_button_logic:
     sequence:
-      - service: lock.unlock
-        entity_id: lock.model_y_charge_port_latch
-      - condition: state
-        entity_id: lock.model_y_charge_port_latch
-        state: "locked"
-      - service: cover.open_cover
-        entity_id: cover.model_y_charger_door
-      - condition: state
-        entity_id: cover.model_y_charger_door
-        state: "closed"
-      - service: cover.close_cover
-        entity_id: cover.model_y_charger_door
-      - condition: state
-        entity_id: binary_sensor.model_y_charger
-        state: "off"
-      - condition: state
-        entity_id: binary_sensor.model_y_charging
-        state: "off"
-      - condition: state
-        entity_id: cover.model_y_charger_door
-        state: "open"
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: lock.model_y_charge_port_latch
+                state: "locked"
+            sequence:
+              - service: switch.turn_off
+                target:
+                  entity_id: switch.model_y_charger
+              - service: lock.unlock
+                target:
+                  entity_id: lock.model_y_charge_port_latch
+          - conditions:
+              - condition: state
+                entity_id: cover.model_y_charger_door
+                state: "closed"
+            sequence:
+              - service: cover.open_cover
+                target:
+                  entity_id: cover.model_y_charger_door
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.model_y_charger
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.model_y_charging
+                state: "off"
+              - condition: state
+                entity_id: cover.model_y_charger_door
+                state: "open"
+            sequence:
+              - service: cover.close_cover
+                target:
+                  entity_id: cover.model_y_charger_door
 
+# Script to toggle the charge limit between 80% (for daily use, not straining battery) and 100% (for long trips).
   model_y_set_charge_limit:
     sequence:
       - service: number.set_value
@@ -132,6 +151,57 @@ script:
             {% else %}
               80
             {% endif %}
+
+# Script to handle conditional climate on/off.
+  model_y_toggle_ac_button:
+    alias: Model Y Toggle AC Button
+    sequence:
+      - choose:
+          - conditions:
+              condition: state
+              entity_id: climate.model_y_hvac_climate_system
+              state: "off"
+            sequence:
+              - service: climate.turn_on
+                target:
+                  entity_id: climate.model_y_hvac_climate_system
+          - conditions:
+              condition: state
+              entity_id: climate.model_y_hvac_climate_system
+              state: "on"
+            sequence:
+              - service: climate.turn_off
+                target:
+                  entity_id: climate.model_y_hvac_climate_system
+
+# Script to toggle defrost mode.
+  model_y_toggle_defrost:
+    alias: Model Y Toggle Defrost
+    sequence:
+      - choose:
+          - conditions:
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: climate.model_y_hvac_climate_system
+                    attribute: preset_mode
+                    state: Defrost
+            sequence:
+              - service: climate.set_preset_mode
+                data:
+                  preset_mode: Defrost
+                target:
+                  entity_id: climate.model_y_hvac_climate_system
+          - conditions:
+              - condition: state
+                entity_id: climate.model_y_hvac_climate_system
+                attribute: preset_mode
+                state: Defrost
+            sequence:
+              - service: climate.turn_off
+                data: {}
+                target:
+                  entity_id: climate.model_y_hvac_climate_system
 
 # Scripts to handle conditional locking and unlocking.
   model_y_toggle_door_lock:
@@ -158,25 +228,27 @@ script:
                   entity_id: lock.model_y_doors
     mode: single
 
-# Script to handle conditional climate on/off.
-  model_y_toggle_ac_button:
-    alias: Model Y Toggle AC Button
-    sequence:
-      - service_template: >
-          {% if is_state('climate.model_y_hvac_climate_system', 'off') %}
-            climate.turn_on
-          {% else %}
-            climate.turn_off
-          {% endif %}
-        entity_id: climate.model_y_hvac_climate_system
-
 # Script to handle conditional window venting.
-  model_y_window_button:
+  model_y_window_vent_button:
+    alias: Model Y Window Vent Button
     sequence:
-      - service_template: >
-          {% if is_state('binary_sensor.model_y_windows', 'off') %}
-            cover.open_cover
-          {% else %}
-            climate.turn_off
-          {% endif %}
-        entity_id: cover.model_y_windows
+      - choose:
+          - conditions:
+              condition: state
+              entity_id: binary_sensor.model_y_windows
+              state: "off"
+            sequence:
+              - service: cover.open_cover
+                target:
+                  entity_id: binary_sensor.model_y_windows
+              - service: climate.turn_off
+                target:
+                  entity_id: climate.model_y_hvac_climate_system
+          - conditions:
+              condition: state
+              entity_id: binary_sensor.model_y_windows
+              state: "on"
+            sequence:
+              - service: cover.close_cover
+                target:
+                  entity_id: binary_sensor.model_y_windows
