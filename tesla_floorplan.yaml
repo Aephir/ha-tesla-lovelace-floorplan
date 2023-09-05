@@ -1,7 +1,7 @@
 type: custom:floorplan-card
 config:
   image:
-    location: /local/floorplan/tesla/tesla_floorplan_no_clip_v2.svg
+    location: /local/floorplan/tesla/tesla_floorplan.svg
     cache: false
   stylesheet:
     location: /local/floorplan/tesla/tesla_floorplan.css
@@ -342,11 +342,10 @@ config:
         - service: floorplan.style_set
           service_data:
             style: >
-              animation: charge-animation-variable ${entity.state === 'on' ? (5 / 100 * (entity.attributes.charge_limit - entity.attributes.battery_level)) : 0}s linear infinite;
+              animation: charge-animation-variable ${entity.state === 'on' ? (8 / 100 * (entity.attributes.charge_limit - entity.attributes.battery_level)) : 0}s linear infinite;
               --from-width: ${entity.attributes.battery_level}%;
               --to-width: ${entity.attributes.charge_limit}%;
               width: ${entity.state === 'on' ? 'auto' : '0%'};
-
 
     - name: Charge Port Icon
       entities:
@@ -363,6 +362,22 @@ config:
       state_action:
         - service: floorplan.class_set
           service_data: '${(entity.state === "on") ? "icon-fill-grey" : "icon-fill-red"}'
+
+    - name: EV Charger Icon Medium
+      entities:
+        - entity: input_boolean.charge_car_in_medium_peak
+          element: ev-charger-icon-medium
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "openevse-charge-medium-peak-on" : "openevse-charge-medium-peak-off"}'
+
+    - name: EV Charger Icon Peak
+      entities:
+        - entity: input_boolean.charge_car_in_peak
+          element: ev-charger-icon-peak
+      state_action:
+        - service: floorplan.class_set
+          service_data: '${(entity.state === "on") ? "openevse-charge-peak-on" : "openevse-charge-peak-off"}'
 
     - name: Defrost Icon
       entities:
@@ -493,6 +508,15 @@ config:
         - service: cover.toggle
           service_data:
             entity_id: cover.model_y_windows
+
+    - name: EV Charger Button
+      entities:
+        - entity: input_boolean.charge_car_in_medium_peak
+          element: ev-charger-button
+      hover_action: disable
+      hold_action: disable
+      tap_action:
+        - service: script.openevse_charge_time_mode
 
     - name: Force Update Button
       entities:
