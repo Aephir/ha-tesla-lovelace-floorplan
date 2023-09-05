@@ -6,7 +6,7 @@ I should also say that this is a work in progress, some things don't work yet. I
 
 This is a card for controlling and viewing a Tesla car. I have made this for a black Model Y, since this i what I have. However, I have provided a tetmplate and guide if anyone wants tto replace the images with their own model/color.
 
-Here are some screenshots fromo v1.0
+Here are some screenshots from v1.0
 All doors closed, car offline | Trunk open, car online
 :-------------------------:|:-------------------------:
 <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/all-closed-offline.png?raw=true" width="400" /> | <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/trunk-open-online.png?raw=true" width="400" />
@@ -19,9 +19,10 @@ Doors closed, not charging, charge limit 80% | Trunk, frunk open, charging, char
 ## Requirements
 - The [Tesla custom component](https://github.com/alandtse/tesla)
 - The [ha-floorplan component](https://github.com/ExperienceLovelace/ha-floorplan)
+- [Optional] A car charger that has a Home Assistant integration (I use OpenEVSE in the example with [this custom integration](https://github.com/firstof9/openevse)). This is needed only for the button to toggle when to charge that wass introduced in v2.0.0. Feel free to ignore this part if not relevant.
 
 ## Installation
-No addiional installation required. Simply:
+No additional installation required. Simply:
 - Add the `tesla-floorplan.svg` to your preferred location (if not under `/config/www/floorplan/tesla`, then modify line 4 in the `tesla-florplan.yaml` accordingly)
 - Add the tesla-floorplan.css to the same location as the `tesla-floorplan.svg` (if not under `/config/www/floorplan/tesla`, then modify line 7 in the `tesla-florplan.yaml` accordingly)
 - Add or copy the content of `packages/tesla_floorplan_package.yaml` to your preferred locaiton (`/config/packages` is used for my examples)
