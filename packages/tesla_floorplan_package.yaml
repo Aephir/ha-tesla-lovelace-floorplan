@@ -5,7 +5,11 @@
 #                                #
 ##################################
 
+
 template:
+    # Binary sensor that keeps track of the state of all openings that are shown on the main image (in attributes)
+    # (doors, trunk, frunk, charging port).
+    # Required in single entity for floorplan logic.
   - binary_sensor:
       - name: "Tesla Model Y All Openings"
         state: >-
@@ -38,6 +42,9 @@ template:
           trunk: >-
             {{ states('cover.model_y_trunk')|lower }}
 
+        # Binary sensor to keep track of all tire pressures.
+        # Required in single entity for floorplan logic, but no longer used from v.1.1 and onwards.
+        # Will likely re-introduce in some form in the future.
       - name: "Tesla Model Y Tire Warning"
         state: >-
           {% set front_left_raw = states('sensor.model_y_tpms_front_left') %}
@@ -67,6 +74,7 @@ template:
           back_left: "{{ states('sensor.model_y_tpms_rear_left') }}"
           back_right: "{{ states('sensor.model_y_tpms_rear_right') }}"
 
+        # Binary sensor for animating the battery charge bar.
       - name: "Model Y Charger Animation"
         state: >-
           {% if states['binary_sensor.model_y_charging'].state == 'on' %}
@@ -80,6 +88,7 @@ template:
           charge_limit: "{{ states('number.model_y_charge_limit') }}"
 
   - sensor:
+        # Sensor for parsing charge time remaining.
       - name: "Model Y Charge Time Remaining"
         state: >
           {% set charge_complete_time_raw = states('sensor.model_y_time_charge_complete') %}
@@ -98,8 +107,8 @@ template:
           charging: "{{ states('sensor.model_y_charging') }}"
 
 script:
-# Script to open or close the charge port
-# Take care if using, states might not be updated in HA, and you can end up sending a "close" command while connected
+  # Script to open or close the charge port
+  # Take care if using, states might not be updated in HA, and you can end up sending a "close" command while connected
   model_y_charge_port_button_logic:
     sequence:
       - choose:
@@ -137,7 +146,7 @@ script:
                 target:
                   entity_id: cover.model_y_charger_door
 
-# Script to toggle the charge limit between 80% (for daily use, not straining battery) and 100% (for long trips).
+  # Script to toggle the charge limit between 80% (for daily use, not straining battery) and 100% (for long trips).
   model_y_set_charge_limit:
     sequence:
       - service: number.set_value
@@ -152,7 +161,7 @@ script:
               80
             {% endif %}
 
-# Script to handle conditional climate on/off.
+  # Script to handle conditional climate on/off.
   model_y_toggle_ac_button:
     alias: Model Y Toggle AC Button
     sequence:
@@ -174,7 +183,7 @@ script:
                 target:
                   entity_id: climate.model_y_hvac_climate_system
 
-# Script to toggle defrost mode.
+  # Script to toggle defrost mode.
   model_y_toggle_defrost:
     alias: Model Y Toggle Defrost
     sequence:
@@ -203,7 +212,7 @@ script:
                 target:
                   entity_id: climate.model_y_hvac_climate_system
 
-# Scripts to handle conditional locking and unlocking.
+  # Scripts to handle conditional locking and unlocking.
   model_y_toggle_door_lock:
     alias: Mode Y Toggle Door Lock
     sequence:
@@ -228,7 +237,7 @@ script:
                   entity_id: lock.model_y_doors
     mode: single
 
-# Script to handle conditional window venting.
+  # Script to handle conditional window venting.
   model_y_window_vent_button:
     alias: Model Y Window Vent Button
     sequence:
@@ -252,3 +261,240 @@ script:
               - service: cover.close_cover
                 target:
                   entity_id: binary_sensor.model_y_windows
+
+  # Script to toggle EV charger state
+  # Omit or change this if you don't have an EV charger, or have a different type
+  openevse_charge_time_mode:
+    alias: OpenEVSE Charge Time Mode
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "off"
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "off"
+            sequence:
+              - service: input_boolean.turn_on
+                data: { }
+                target:
+                  entity_id: input_boolean.charge_car_in_medium_peak
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "on"
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "off"
+            sequence:
+              - service: input_boolean.turn_on
+                data: { }
+                target:
+                  entity_id: input_boolean.charge_car_in_peak
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "on"
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_off
+                data: { }
+                target:
+                  entity_id: input_boolean.charge_car_in_medium_peak
+              - service: input_boolean.turn_off
+                data: { }
+                target:
+                  entity_id: input_boolean.charge_car_in_peak
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "off"
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "on"
+            sequence:
+              - service: input_boolean.turn_off
+                data: { }
+                target:
+                  entity_id: input_boolean.charge_car_in_peak
+    mode: single
+
+
+# Input booleans to control the automations below for the EV charging station.
+# Don't include if you don't want to automate the on/off state of the charging station
+input_boolean:
+  charge_car_in_medium_peak:
+    name: Charge Car in Medium Peak Hours
+    icon: mdi:ev-charger
+  charge_car_in_peak:
+    name: Charge Car in Peak Hours
+    icon: mdi:ev-charger
+
+# Automations
+automation:
+
+    # Automation to turn off the car charger when the car is away (so no one else uses),
+  - id: car_charger_off_away
+    alias: Car charger off when away
+    description: Turn off openEVSE charger when car is away
+    trigger:
+      - platform: state
+        entity_id:
+          - device_tracker.model_y_location_tracker
+        to: not_home
+    condition: [ ]
+    action:
+      - service: switch.turn_on
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
+
+    # Automation to turn off the car charger when outside "low electricity price" hours
+  - id: car_charger_off_normal
+    alias: Car charger off normal
+    description: Tuns off car charger if set t normal charge times
+    trigger:
+      - platform: time
+        at: "06:00:00"
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_medium_peak
+        to: "off"
+    condition:
+      - condition: state
+        entity_id: input_boolean.charge_car_in_medium_peak
+        state: "off"
+      - condition: state
+        entity_id: input_boolean.charge_car_in_peak
+        state: "off"
+    action:
+      - service: switch.turn_on
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
+
+    # Automation to turn off the car charger when outside "medium electricity price" hours
+  - id: car_charger_off_medium
+    alias: Car charger off medium
+    description: Tuns off car charger if set to include medium peak charging hours
+    trigger:
+      - platform: time
+        at: "17:00:00"
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_peak
+        to: "off"
+    condition:
+      - condition: state
+        entity_id: input_boolean.charge_car_in_medium_peak
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.charge_car_in_peak
+        state: "off"
+    action:
+      - service: switch.turn_on
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
+
+    # Automation to turn on the car charger when the car is home, and inside "low electricity price" hours
+  - id: car_charger_on_normal
+    alias: Car charger on normal
+    description: Tuns on car charger if set to normal charging hours
+    trigger:
+      - platform: time
+        at: "00:00:00"
+      - platform: state
+        entity_id:
+          - device_tracker.model_y_location_tracker
+        to: home
+    condition:
+      - condition: state
+        entity_id: device_tracker.model_y_location_tracker
+        state: home
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      - condition: time
+        after: "23:59:59"
+        before: "06:00:00"
+    action:
+      - service: switch.turn_off
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
+
+    # Automation to turn on the car charger when the car is home, and inside "medium electricity price" hours
+  - id: car_charger_on_medium
+    alias: Car charger on medium
+    description: Tuns on car charger if set to include medium peak charging hours
+    trigger:
+      - platform: time
+        at: "21:00:00"
+      - platform: state
+        entity_id:
+          - device_tracker.model_y_location_tracker
+        to: home
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_medium_peak
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: device_tracker.model_y_location_tracker
+        state: home
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      - condition: time
+        after: "20:59:59"
+        before: "17:00:00"
+      - condition: state
+        entity_id: input_boolean.charge_car_in_medium_peak
+        state: "on"
+    action:
+      - service: switch.turn_off
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
+
+    # Automation to turn on the car charger when the car is home, regardless of current electricity price.
+  - id: car_charger_on_peak
+    alias: Car charger on peak
+    description: Tuns on car charger if set to include peak charging hours
+    trigger:
+      - platform: state
+        entity_id:
+          - device_tracker.model_y_location_tracker
+        to: home
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_peak
+        to: "on"
+    condition:
+      - condition: state
+        entity_id: device_tracker.model_y_location_tracker
+        state: home
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      - condition: state
+        entity_id: input_boolean.charge_car_in_medium_peak
+        state: "on"
+    action:
+      - service: switch.turn_off
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+    mode: single
