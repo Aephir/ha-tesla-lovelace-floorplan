@@ -127,3 +127,27 @@
   fill: #5a5a5a !important;
   fill-opacity: 1 !important;
 }
+
+/* OpenEVSE charger */
+
+.openevse-charge-medium-peak-on {
+  fill: #1b9625 !important;
+  fill-opacity: 1 !important;
+}
+
+.openevse-charge-medium-peak-off {
+  fill: #5a5a5a !important;
+  fill-opacity: 1 !important;
+  visibility: hidden !important;
+}
+
+.openevse-charge-peak-on {
+  fill: #0f3efc !important;
+  fill-opacity: 1 !important;
+}
+
+.openevse-charge-peak-off {
+  fill: #5a5a5a !important;
+  fill-opacity: 1 !important;
+  visibility: hidden !important;
+}
