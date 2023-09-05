@@ -467,7 +467,7 @@ config:
         - entity: climate.model_y_hvac_climate_system
           element: ac-button
       tap_action:
-          - service: script.model_y_ac_toggle_button
+          - service: script.model_y_toggle_ac_button
 
     - name: Defrost Button
       entities:
