@@ -336,165 +336,132 @@ input_boolean:
 # Automations
 automation:
 
-    # Automation to turn off the car charger when the car is away (so no one else uses),
-  - id: car_charger_off_away
-    alias: Car charger off when away
-    description: Turn off openEVSE charger when car is away
+    # Automation to turn off the car charger when appropriate
+    # Useful if you have a home charger that can integrate with Home Assistant
+    # If not, you can perhaps modify to directly turn on/off switch.model_y_charger
+  - id: car_charger_on_automation
+    alias: Car charger on automation
+    description:  "Logic to turn off car charger when car is home and electricity fees are lower"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id:
+          - device_tracker.model_y_location_tracker
+        to: home
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_medium_peak
+        to: "on"
+      - platform: state
+        entity_id:
+          - input_boolean.charge_car_in_peak
+        to: "on"
+      - platform: time
+        at: "00:00:01"
+      - platform: time
+        at: "21:00:01"
+    condition:
+      - condition: or
+        conditions:
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: device_tracker.model_y_location_tracker
+                state: home
+              - condition: time
+                after: "00:00:00"
+                before: "06:00:00"
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: device_tracker.model_y_location_tracker
+                state: home
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "on"
+              - condition: or
+                conditions:
+                  - condition: time
+                    after: "06:00:00"
+                    before: "17:00:00"
+                  - condition: time
+                    after: "21:00:00"
+                    before: "00:00:00"
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: device_tracker.model_y_location_tracker
+                state: home
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "on"
+              - condition: time
+                after: "17:00:00"
+                before: "21:00:00"
+    action:
+      - service: switch.turn_off
+        data: { }
+        target:
+          entity_id: switch.openevse_sleep_mode
+
+    # Automation to turn off the car charger when appropriate
+    # Useful if you have a home charger that can integrate with Home Assistant
+    # If not, you can perhaps modify to directly turn on/off switch.model_y_charger
+    # In that case, you of course won't be able to turn off your charger if your car is away from home
+  - id: car_charger_off_automation
+    alias: Car charger off automation
+    description: "Logic to turn off car charger when car is not home, or when electricity fees are higher"
+    mode: single
     trigger:
       - platform: state
         entity_id:
           - device_tracker.model_y_location_tracker
         to: not_home
-    condition: [ ]
-    action:
-      - service: switch.turn_on
-        data: { }
-        target:
-          entity_id: switch.openevse_sleep_mode
-    mode: single
-
-    # Automation to turn off the car charger when outside "low electricity price" hours
-  - id: car_charger_off_normal
-    alias: Car charger off normal
-    description: Tuns off car charger if set t normal charge times
-    trigger:
-      - platform: time
-        at: "06:00:00"
       - platform: state
         entity_id:
           - input_boolean.charge_car_in_medium_peak
         to: "off"
-    condition:
-      - condition: state
-        entity_id: input_boolean.charge_car_in_medium_peak
-        state: "off"
-      - condition: state
-        entity_id: input_boolean.charge_car_in_peak
-        state: "off"
-    action:
-      - service: switch.turn_on
-        data: { }
-        target:
-          entity_id: switch.openevse_sleep_mode
-    mode: single
-
-    # Automation to turn off the car charger when outside "medium electricity price" hours
-  - id: car_charger_off_medium
-    alias: Car charger off medium
-    description: Tuns off car charger if set to include medium peak charging hours
-    trigger:
-      - platform: time
-        at: "17:00:00"
       - platform: state
         entity_id:
           - input_boolean.charge_car_in_peak
         to: "off"
+        for:
+          hours: 0
+          minutes: 0
+          seconds: 0
+      - platform: time
+        at: "06:00:01"
+      - platform: time
+        at: "17:00:01"
     condition:
-      - condition: state
-        entity_id: input_boolean.charge_car_in_medium_peak
-        state: "on"
-      - condition: state
-        entity_id: input_boolean.charge_car_in_peak
-        state: "off"
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: device_tracker.model_y_location_tracker
+            state: not_home
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_medium_peak
+                state: "off"
+              - condition: or
+                conditions:
+                  - condition: time
+                    after: "06:00:00"
+                    before: "17:00:00"
+                  - condition: time
+                    after: "21:00:00"
+                    before: "00:00:00"
+          - condition: and
+            conditions:
+              - condition: state
+                entity_id: input_boolean.charge_car_in_peak
+                state: "off"
+              - condition: time
+                after: "17:00:00"
+                before: "21:00:00"
     action:
       - service: switch.turn_on
         data: { }
         target:
           entity_id: switch.openevse_sleep_mode
-    mode: single
-
-    # Automation to turn on the car charger when the car is home, and inside "low electricity price" hours
-  - id: car_charger_on_normal
-    alias: Car charger on normal
-    description: Tuns on car charger if set to normal charging hours
-    trigger:
-      - platform: time
-        at: "00:00:00"
-      - platform: state
-        entity_id:
-          - device_tracker.model_y_location_tracker
-        to: home
-    condition:
-      - condition: state
-        entity_id: device_tracker.model_y_location_tracker
-        state: home
-        for:
-          hours: 0
-          minutes: 0
-          seconds: 0
-      - condition: time
-        after: "23:59:59"
-        before: "06:00:00"
-    action:
-      - service: switch.turn_off
-        data: { }
-        target:
-          entity_id: switch.openevse_sleep_mode
-    mode: single
-
-    # Automation to turn on the car charger when the car is home, and inside "medium electricity price" hours
-  - id: car_charger_on_medium
-    alias: Car charger on medium
-    description: Tuns on car charger if set to include medium peak charging hours
-    trigger:
-      - platform: time
-        at: "21:00:00"
-      - platform: state
-        entity_id:
-          - device_tracker.model_y_location_tracker
-        to: home
-      - platform: state
-        entity_id:
-          - input_boolean.charge_car_in_medium_peak
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: device_tracker.model_y_location_tracker
-        state: home
-        for:
-          hours: 0
-          minutes: 0
-          seconds: 0
-      - condition: time
-        after: "20:59:59"
-        before: "17:00:00"
-      - condition: state
-        entity_id: input_boolean.charge_car_in_medium_peak
-        state: "on"
-    action:
-      - service: switch.turn_off
-        data: { }
-        target:
-          entity_id: switch.openevse_sleep_mode
-    mode: single
-
-    # Automation to turn on the car charger when the car is home, regardless of current electricity price.
-  - id: car_charger_on_peak
-    alias: Car charger on peak
-    description: Tuns on car charger if set to include peak charging hours
-    trigger:
-      - platform: state
-        entity_id:
-          - device_tracker.model_y_location_tracker
-        to: home
-      - platform: state
-        entity_id:
-          - input_boolean.charge_car_in_peak
-        to: "on"
-    condition:
-      - condition: state
-        entity_id: device_tracker.model_y_location_tracker
-        state: home
-        for:
-          hours: 0
-          minutes: 0
-          seconds: 0
-      - condition: state
-        entity_id: input_boolean.charge_car_in_medium_peak
-        state: "on"
-    action:
-      - service: switch.turn_off
-        data: { }
-        target:
-          entity_id: switch.openevse_sleep_mode
-    mode: single
