@@ -21,7 +21,7 @@ Doors closed, not charging, charge limit 80% | Trunk, frunk open, charging, char
 - The [ha-floorplan component](https://github.com/ExperienceLovelace/ha-floorplan)
 - [Optional] A car charger that has a Home Assistant integration (I use OpenEVSE in the example with [this custom integration](https://github.com/firstof9/openevse)). This is needed only for the button to toggle when to charge that wass introduced in v2.0.0. Feel free to ignore this part if not relevant.
 
-## Installation
+## Installation and configuration
 No additional installation required. Simply:
 - Add the `tesla-floorplan.svg` to your preferred location (if not under `/config/www/floorplan/tesla`, then modify line 4 in the `tesla-florplan.yaml` accordingly)
 - Add the tesla-floorplan.css to the same location as the `tesla-floorplan.svg` (if not under `/config/www/floorplan/tesla`, then modify line 7 in the `tesla-florplan.yaml` accordingly)
@@ -34,7 +34,11 @@ homeassistant:
 ```
 
 - Replace all intances of `.tesla_model_y_` in the `tesla-floorplan.yaml` with `.$YOUR_TESLA_NAME_`, where `$YOUR_TESLA_NAME` is whatever you named your Tesla (the prefix to all the entity names created when you set up the Tesla custom inntegration)
+- Replace all instances of `switch.openevse_sleep_mode` with the name of your ev charger on/off switch.
+  - OBS! Make sure yours is a "sleep mode". If instead itt i "on/off", you might need to change the `action` in the automations from `switch.turn_on` to `switch.turn_off` and vice versa.
+  - OBS! If you cannot control your ev charging station via Home assistant, you can instead add the control directly to the car using `switch.model_y_charger` (changing `model_y` to the name of you car). Again, remember to change `switch.turn_on` and `switch.turn_off` accordingly.
 - Then go to your Lovelace dashboard to add a new card, select `manual`, and copy the content of `tesla-florplan.yaml` and press save.
+- See [More Information](#more-information) for additional details
 
 
 ## Features
@@ -111,7 +115,21 @@ For whatever reason, I never got floorplan to play nice with these "clip path" o
 <img src="https://github.com/Aephir/ha-tesla-lovelace-floorplan/blob/main/images/order-of-picture-fragments.png?raw=true" width="300" />
 
 
+## More information
 
+The package handles the scripts, automations, etc. required for the buttons to work and the correct classess to be set. It creates:
 
+### Binary sensors & sensors
+Used to store more information than what is in one (binatry_)senor. The Home Assistant credo of "everything in its own sensor, not in attributes" makes Floorplan a bit difficult to use (as far as I can tell, it's difficult to "listen" for changes in many different sensors in a single "rule"), so I combined all info needed for each rule in single (binary_)sensors.
 
+### Input booleans
+These are to control when to charge. There are three options, and you can mange the times by editing the `car_charger_off_automation` and `car_charger_on_automation`. They are currently set in tiers based on the electricity price (which typically correlatetss with load, so in low load you are typically using more "green" enegy, at least where I live):
+1. Only when cheapest (in my case that is between 00:00 and 06:00)
+2. Charge anytime ouutside of peak electricity price (in my case that is the times in (1) and also between 06:00 and 17:00, and again between 21:00 and 00:00)
+3. Charge at any time, regardless of electricity prices (use if you just need to charge as fast as possible)
 
+### Scripts
+There are a few, mostly to handle more complex automation that the Home Asssistant Automations can't (or where I haven't figured out how to, I typically only use AppDaemon for automations, and am not familiar with the "native" automaotions, so if anyone has a way to implement the scripts direnctly an automation, please let me know!.
+
+### Automations
+Used with the input booleans, see above.
